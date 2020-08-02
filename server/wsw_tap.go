@@ -10,8 +10,10 @@ import (
 	"gopkg.in/segmentio/analytics-go.v3"
 )
 
-// wswMiddleware is a middleware for a wsWrapper
-type wswMiddleware func(*wsWrapper) error
+// wswTap is a tee/tap for a wsWrapper. Technically there's nothing stopping
+// you from modifying the stream, but using wsWrapper.getReadTap and
+// wsWrapper.getWriteTap to do the tapping will avoid accidentally doing so.
+type wswTap func(*wsWrapper) error
 
 // scanLinesCr is bufio.ScanLines but it additionally splits on a lone CR.
 //
@@ -57,7 +59,7 @@ func filterMessageType(reader io.Reader, msgType byte) io.Reader {
 	return pipeR
 }
 
-func WithSegment(writeKey string) wswMiddleware {
+func WithSegment(writeKey string) wswTap {
 	return func(wsw *wsWrapper) error {
 		client := analytics.New(writeKey)
 		log.Printf("Initialized Segment client (%s)\n", writeKey)
@@ -91,7 +93,7 @@ func WithSegment(writeKey string) wswMiddleware {
 
 // WithRecordInput tees reads from the websocket (ie data recv'd from the
 // client) to a file. *UNIMPLEMENTED*
-func WithRecordInput(filename string) wswMiddleware {
+func WithRecordInput(filename string) wswTap {
 	return func(wsw *wsWrapper) error {
 		// TODO(cqsd)
 		log.Printf("UNIMPLEMENTED: Logging recv'd data to %s\n", filename)
@@ -113,7 +115,7 @@ func WithRecordInput(filename string) wswMiddleware {
 
 // WithRecordOutput tees writes to the websocket (ie data sent back to the
 // client) to a file. *UNIMPLEMENTED*
-func WithRecordOutput(filename string) wswMiddleware {
+func WithRecordOutput(filename string) wswTap {
 	return func(wsw *wsWrapper) error {
 		// TODO(cqsd)
 		log.Printf("UNIMPLEMENTED: Logging sent data to %s\n", filename)

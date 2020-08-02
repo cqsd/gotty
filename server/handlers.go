@@ -159,18 +159,18 @@ func (server *Server) processWSConn(ctx context.Context, conn *websocket.Conn) e
 	}
 
 	ws := NewWsWrapper(conn)
-	var middlewares []wswMiddleware
+	var taps []wswTap
 	if server.options.RecordOutputDirname != "" {
-		middlewares = append(middlewares, WithRecordOutput(server.options.RecordOutputDirname))
+		taps = append(taps, WithRecordOutput(server.options.RecordOutputDirname))
 	}
 	if server.options.RecordInputDirname != "" {
-		middlewares = append(middlewares, WithRecordInput(server.options.RecordInputDirname))
+		taps = append(taps, WithRecordInput(server.options.RecordInputDirname))
 	}
 	if server.options.SegmentWriteKey != "" {
-		middlewares = append(middlewares, WithSegment(server.options.SegmentWriteKey))
+		taps = append(taps, WithSegment(server.options.SegmentWriteKey))
 	}
-	for _, applyMiddleware := range middlewares {
-		applyMiddleware(ws)
+	for _, attachTap := range taps {
+		attachTap(ws)
 	}
 
 	tty, err := webtty.New(ws, slave, opts...)
