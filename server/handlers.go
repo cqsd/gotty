@@ -158,7 +158,22 @@ func (server *Server) processWSConn(ctx context.Context, conn *websocket.Conn) e
 		opts = append(opts, webtty.WithMasterPreferences(server.options.Preferences))
 	}
 
-	tty, err := webtty.New(&wsWrapper{conn}, slave, opts...)
+	ws := NewWsWrapper(conn)
+	var middlewares []wswMiddleware
+	if server.options.RecordOutputDirname != "" {
+		middlewares = append(middlewares, WithRecordOutput(server.options.RecordOutputDirname))
+	}
+	if server.options.RecordInputDirname != "" {
+		middlewares = append(middlewares, WithRecordInput(server.options.RecordInputDirname))
+	}
+	if server.options.SegmentWriteKey != "" {
+		middlewares = append(middlewares, WithSegment(server.options.SegmentWriteKey))
+	}
+	for _, applyMiddleware := range middlewares {
+		applyMiddleware(ws)
+	}
+
+	tty, err := webtty.New(ws, slave, opts...)
 	if err != nil {
 		return errors.Wrapf(err, "failed to create webtty")
 	}

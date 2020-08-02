@@ -8,6 +8,9 @@ type Options struct {
 	Address             string           `hcl:"address" flagName:"address" flagSName:"a" flagDescribe:"IP address to listen" default:"0.0.0.0"`
 	Port                string           `hcl:"port" flagName:"port" flagSName:"p" flagDescribe:"Port number to liten" default:"8080"`
 	PermitWrite         bool             `hcl:"permit_write" flagName:"permit-write" flagSName:"w" flagDescribe:"Permit clients to write to the TTY (BE CAREFUL)" default:"false"`
+	SegmentWriteKey     string           `hcl:"segment_write_key" flagName:"segment-write-key" flagDescribe:"emit commands to segment" default:""`
+	RecordInputDirname  string           `hcl:"record_input_dirname" flagName:"record-input" flagDescribe:"record session keystrokes to a directory" default:""`
+	RecordOutputDirname string           `hcl:"record_output_dirname" flagName:"record-output" flagDescribe:"record session terminal output to a directory" default:""`
 	EnableBasicAuth     bool             `hcl:"enable_basic_auth" default:"false"`
 	Credential          string           `hcl:"credential" flagName:"credential" flagSName:"c" flagDescribe:"Credential for Basic Authentication (ex: user:pass, default disabled)" default:""`
 	EnableRandomUrl     bool             `hcl:"enable_random_url" flagName:"random-url" flagSName:"r" flagDescribe:"Add a random string to the URL" default:"false"`
