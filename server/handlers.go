@@ -105,6 +105,10 @@ func (server *Server) processWSConn(ctx context.Context, conn *websocket.Conn) e
 		return errors.New("failed to authenticate websocket connection")
 	}
 
+	if len(init.ClientId) > -1 {
+		log.Printf("%s has connection ID %s\n", conn.RemoteAddr().String(), init.ClientId)
+	}
+
 	queryPath := "?"
 	if server.options.PermitArguments && init.Arguments != "" {
 		queryPath = init.Arguments
@@ -167,7 +171,7 @@ func (server *Server) processWSConn(ctx context.Context, conn *websocket.Conn) e
 		taps = append(taps, WithRecordInput(server.options.RecordInputDirname))
 	}
 	if server.options.SegmentWriteKey != "" {
-		taps = append(taps, WithSegment(server.options.SegmentWriteKey))
+		taps = append(taps, WithSegment(server.options.SegmentWriteKey, init.ClientId))
 	}
 	for _, attachTap := range taps {
 		attachTap(ws)

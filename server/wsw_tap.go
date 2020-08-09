@@ -8,6 +8,8 @@ import (
 	"log"
 
 	"gopkg.in/segmentio/analytics-go.v3"
+
+	"github.com/yudai/gotty/messages"
 )
 
 // wswTap is a tee/tap for a wsWrapper. Technically there's nothing stopping
@@ -59,17 +61,17 @@ func filterMessageType(reader io.Reader, msgType byte) io.Reader {
 	return pipeR
 }
 
-func WithSegment(writeKey string) wswTap {
+func WithSegment(writeKey string, clientId string) wswTap {
 	return func(wsw *wsWrapper) error {
 		client := analytics.New(writeKey)
-		log.Printf("Initialized Segment client (%s)\n", writeKey)
+		log.Printf("Initialized Segment client (%s) for connection ID %s\n", writeKey, clientId)
 		remoteHost := wsw.conn.RemoteAddr().String()
 		readTap := wsw.getReadTap()
 
 		go func() {
 			// filter for keyboard inputs only. don't emit track calls for
 			// terminal resize or pings
-			scanner := bufio.NewScanner(filterMessageType(readTap, '1'))
+			scanner := bufio.NewScanner(filterMessageType(readTap, messages.Input))
 			scanner.Split(scanLinesCr)
 			for scanner.Scan() {
 				input := scanner.Bytes()
@@ -77,12 +79,13 @@ func WithSegment(writeKey string) wswTap {
 					continue
 				}
 				s := fmt.Sprintf("%q", input)
-				log.Printf("SEGMENT (%s): tracking command %s\n", remoteHost, s)
+				log.Printf("SEGMENT|%s|%s|%s\n", remoteHost, clientId, s)
 				client.Enqueue(analytics.Track{
 					Event:  "gotty input",
-					UserId: remoteHost,
+					UserId: clientId, // this can be empty (e.g., when localstorage is disabled)
 					Properties: analytics.NewProperties().
-						Set("input", s),
+						Set("input", s).
+						Set("remote", remoteHost),
 				})
 			}
 		}()

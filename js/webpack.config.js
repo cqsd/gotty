@@ -16,11 +16,11 @@ module.exports = {
                 loader: "ts-loader",
                 exclude: /node_modules/
             },
-            {
-                test: /\.js$/,
-                include: /node_modules/,
-                loader: 'license-loader'
-            }
+            // {
+            //     test: /\.js$/,
+            //     include: /node_modules/,
+            //     loader: 'license-loader'
+            // }
         ]
     },
     plugins: [

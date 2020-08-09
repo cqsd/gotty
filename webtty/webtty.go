@@ -7,6 +7,8 @@ import (
 	"sync"
 
 	"github.com/pkg/errors"
+
+	"github.com/yudai/gotty/messages"
 )
 
 // WebTTY bridges a PTY slave and its PTY master.
@@ -110,21 +112,21 @@ func (wt *WebTTY) Run(ctx context.Context) error {
 }
 
 func (wt *WebTTY) sendInitializeMessage() error {
-	err := wt.masterWrite(append([]byte{SetWindowTitle}, wt.windowTitle...))
+	err := wt.masterWrite(append([]byte{messages.SetWindowTitle}, wt.windowTitle...))
 	if err != nil {
 		return errors.Wrapf(err, "failed to send window title")
 	}
 
 	if wt.reconnect > 0 {
 		reconnect, _ := json.Marshal(wt.reconnect)
-		err := wt.masterWrite(append([]byte{SetReconnect}, reconnect...))
+		err := wt.masterWrite(append([]byte{messages.SetReconnect}, reconnect...))
 		if err != nil {
 			return errors.Wrapf(err, "failed to set reconnect")
 		}
 	}
 
 	if wt.masterPrefs != nil {
-		err := wt.masterWrite(append([]byte{SetPreferences}, wt.masterPrefs...))
+		err := wt.masterWrite(append([]byte{messages.SetPreferences}, wt.masterPrefs...))
 		if err != nil {
 			return errors.Wrapf(err, "failed to set preferences")
 		}
@@ -135,7 +137,7 @@ func (wt *WebTTY) sendInitializeMessage() error {
 
 func (wt *WebTTY) handleSlaveReadEvent(data []byte) error {
 	safeMessage := base64.StdEncoding.EncodeToString(data)
-	err := wt.masterWrite(append([]byte{Output}, []byte(safeMessage)...))
+	err := wt.masterWrite(append([]byte{messages.Output}, []byte(safeMessage)...))
 	if err != nil {
 		return errors.Wrapf(err, "failed to send message to master")
 	}
@@ -161,7 +163,7 @@ func (wt *WebTTY) handleMasterReadEvent(data []byte) error {
 	}
 
 	switch data[0] {
-	case Input:
+	case messages.Input:
 		if !wt.permitWrite {
 			return nil
 		}
@@ -175,13 +177,13 @@ func (wt *WebTTY) handleMasterReadEvent(data []byte) error {
 			return errors.Wrapf(err, "failed to write received data to slave")
 		}
 
-	case Ping:
-		err := wt.masterWrite([]byte{Pong})
+	case messages.Ping:
+		err := wt.masterWrite([]byte{messages.Pong})
 		if err != nil {
 			return errors.Wrapf(err, "failed to return Pong message to master")
 		}
 
-	case ResizeTerminal:
+	case messages.ResizeTerminal:
 		if wt.columns != 0 && wt.rows != 0 {
 			break
 		}

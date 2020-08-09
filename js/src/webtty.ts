@@ -1,3 +1,5 @@
+import currentUser from "./track";
+
 export const protocols = ["webtty"];
 
 export const msgInputUnknown = '0';
@@ -68,8 +70,9 @@ export class WebTTY {
 
                 connection.send(JSON.stringify(
                     {
-                        Arguments: this.args,
-                        AuthToken: this.authToken,
+                        args: this.args,
+                        auth_token: this.authToken,
+                        client_id: currentUser.id,
                     }
                 ));
 

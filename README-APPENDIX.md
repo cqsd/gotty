@@ -22,15 +22,16 @@ $ gotty --segment-write-key abcdefghijklmnopqrstuvwxyzABCDEF -w bash
 Tracking events are sent server-side. The event (without the context set by the Segment SDK) looks about like this:
 ```go
 client.Track(&analytics.Track{
-  UserId: "[::1]:61232",
+  UserId: "142f9d79-6d22-478d-8c10-edf827979b79",
   Event: "gotty input",
   Properties: map[string]interface{}{
     "input": "\"echo hello  \u007gotty\"",
+    "remote": "[::1]:61232",
   },
 })
 ```
 
-The event name is "gotty input", and the user ID is set to the client's remote address. Unprintable inputs like `backspace`, `ctrl`, etc are quoted using Go's `%q`. You may also notice these byte sequences in the output:
+The event name is "gotty input", and the user ID is a UUID stored in the client's localStorage. Unprintable inputs like `backspace`, `ctrl`, etc are quoted using Go's `%q`. You may also notice these byte sequences in the output:
  - `\x1b[O`, which indicates that the client has [unfocused the window](https://github.com/xtermjs/xterm.js/blob/8d912e891e367053d966733310e796c99ac99b60/src/browser/Terminal.ts#L278)
  - `\x1b[I`, which indicates that the client has [focused the window](https://github.com/xtermjs/xterm.js/blob/8d912e891e367053d966733310e796c99ac99b60/src/browser/Terminal.ts#L253)
 
